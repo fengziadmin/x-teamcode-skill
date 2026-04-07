@@ -259,6 +259,21 @@ Before claiming ANY task is complete, you MUST run the verification gate:
 
 Claiming completion without running verification is treated as a defect.
 
+### Acceptance Command Protocol (x-teamcode mandatory)
+
+Every task you receive includes an **Acceptance command** defined by team-lead.
+
+After completing your implementation:
+1. Run the acceptance command exactly as written
+2. **Paste the full raw stdout** in your completion report — not "it passed", the actual output
+3. If the acceptance command fails, fix your implementation and re-run until it passes
+
+**Anti-hollow self-check before reporting DONE:**
+- No function body is `pass` or `...`
+- No function returns hardcoded TODO/mock values
+- Tests assert on actual output content, not just function existence
+- Acceptance command produces real, non-empty output
+
 ### Good Tests vs Bad Tests
 
 **Good tests** verify behavior through public interfaces. They describe WHAT the system does, not HOW. A good test survives internal refactors because it doesn't care about internal structure.
@@ -320,6 +335,9 @@ you do not need to read all task folders.
       Files changed: <list>
       Spec: docs/x-teamcode/specs/<file>.md
       Plan Task: docs/x-teamcode/plans/<file>.md, Task N
+      Acceptance command output:
+      $ <command>
+      <raw stdout>
       My findings: .plans/<project>/<your-name>/task-<name>/findings.md")
    ```
 4. Wait for reviewer's two-stage result:
@@ -557,6 +575,25 @@ Append after the common template:
 **After both stages pass**: notify dev AND team-lead with summary.
 
 **Small tasks exception**: dev may skip for bug fixes, config changes, single-line changes. You can request full review if the "small" change looks risky.
+
+### Hallucination Detection (x-teamcode mandatory)
+
+During BOTH review stages, check for hallucinations:
+
+**Report vs Diff**: Read the dev's claims, then read `git diff`. For each claim, is there corresponding code?
+- "Implemented X" → actual code for X in the diff?
+- "All tests pass" → CI output confirms?
+
+**Report vs Acceptance**: Re-run the acceptance command. Does output match what dev reported? Is it real data (not empty/mock/TODO)?
+
+If any claim doesn't match reality:
+```
+[HALLUCINATION] Dev claimed: "<claim>"
+  Actual: <what code/output shows>
+  Severity: CRITICAL — auto-escalate to team-lead
+```
+
+Hallucination = automatic review failure regardless of other results.
 
 ### Task Folder Structure
 
