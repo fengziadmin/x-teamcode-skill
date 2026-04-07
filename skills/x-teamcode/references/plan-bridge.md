@@ -39,6 +39,37 @@ Skip custodian when:
 - Small team (2-3 agents) — team-lead absorbs compliance checks
 - Short project (single phase)
 
+## Acceptance Command Generation
+
+When converting plan tasks to team tasks, team-lead MUST write an acceptance command for each task.
+
+**Rules:**
+1. The command must be executable without manual setup (assuming the project is running)
+2. The command must verify the feature produces **real output** (not just that code exists)
+3. The command must fail if the implementation is hollow (empty/mock/TODO)
+4. If team-lead cannot write an acceptance command, the task is too vague — decompose further
+
+**Patterns by task type:**
+
+| Task Type | Acceptance Command Pattern |
+|---|---|
+| API endpoint | `curl -s <endpoint> \| jq '<field>'` — expected: non-empty, non-null |
+| Data processing | `python -c "from mod import Func; r = Func().run(input); assert len(r) > 0"` |
+| UI component | E2E test command or screenshot verification |
+| Integration | Pipeline command: step1 \| step2 \| step3, each step non-empty |
+| Library/utility | `python -c "from lib import func; print(func(test_input))"` — expected: correct output |
+
+## Smoke Test Generation
+
+During Phase B, team-lead generates `.plans/<project>/smoke-tests.md`:
+
+1. Read the plan's parallel groups to determine natural checkpoints
+2. For each checkpoint (every 3-5 tasks), write a smoke test that exercises the features completed so far
+3. For each phase boundary, write a full pipeline smoke test
+4. Use the smoke-tests.md template from `references/templates.md`
+5. Smoke tests verify end-to-end data flow, not just individual functions
+6. Each test step has an explicit "Expected" annotation
+
 ## Parallel Group Extraction
 
 Each task in the plan has a `**Parallel group:**` field. The bridge uses these to determine dispatch order:
