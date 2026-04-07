@@ -458,14 +458,28 @@ All roles use task folders when assigned distinct tasks. The folder prefix varie
 
 <What this feature needs to accomplish>
 
+## Acceptance Command
+
+```bash
+<executable command that proves this feature works — written by team-lead>
+```
+Expected output: <description of what correct output looks like>
+
+## Anti-Hollow Checks
+
+- [ ] No `pass` in function bodies
+- [ ] No hardcoded return values
+- [ ] Tests assert on actual output content
+- [ ] Acceptance command produces real output
+
 ## Detailed Steps
 
 - [ ] 1. <step description>
 - [ ] 2. <step description>
 - [ ] 3. <step description>
 - [ ] 4. Write tests (TDD)
-- [ ] 5. Verify coverage >= 80%
-- [ ] 6. Request reviewer review (required for features)
+- [ ] 5. Run acceptance command — paste raw stdout
+- [ ] 6. Request reviewer review
 
 ## Files Involved
 
@@ -1032,4 +1046,45 @@ phase: planning | bridging | executing | complete
 - <date>: bridging — team configuration confirmed
 - <date>: executing — team created, agents spawned
 - <date>: complete — all tasks done, review passed
+```
+
+---
+
+## Smoke Tests (smoke-tests.md)
+
+Generated during Phase B by team-lead. Defines end-to-end verification commands for integration checkpoints and phase boundaries.
+
+```markdown
+# <Project Name> - Integration Smoke Tests
+
+> Generated during Phase B.
+> Team-lead defines these tests; devs do not modify.
+> Run at integration checkpoints (every 3-5 tasks) and phase boundaries.
+
+## Checkpoint 1: After Tasks 1-N
+
+```bash
+# Test: <what this verifies>
+<executable command>
+# Expected: <what correct output looks like, e.g., "non-empty string", "> 0", "status 200">
+```
+
+## Phase M Complete: <phase name>
+
+```bash
+# End-to-end pipeline test
+# Step 1: <description>
+<command>
+# Expected: <expected output>
+
+# Step 2: <description>
+<command>
+# Expected: <expected output>
+```
+
+## Results Log
+
+| Checkpoint | Date | Result | Notes |
+|---|---|---|---|
+| Checkpoint 1 | <date> | PASS/FAIL | <details> |
 ```
