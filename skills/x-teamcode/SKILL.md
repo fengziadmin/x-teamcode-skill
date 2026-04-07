@@ -128,6 +128,8 @@ Do NOT write any code, create any teams, scaffold any project, or take any imple
      - `**Role suggestion:**` which CCteam role should handle it
      - `**Parallel group:**` which tasks can run simultaneously
      - `**Dependencies:**` which tasks must complete first
+     - `**Acceptance command:**` an executable command that proves the feature works (written by team-lead, not dev). If team-lead cannot write one, the task is too vague — decompose further.
+     - `**Anti-hollow checks:**` specific assertions that the implementation is not empty/mock
 4. **Write plan** — save to `docs/x-teamcode/plans/YYYY-MM-DD-<feature-name>.md`
    - Use this header format:
 
@@ -254,10 +256,18 @@ After generating all infrastructure, recommend the user runs `/compact`:
 Agents work autonomously following their onboarding protocols:
 - **TDD iron law** embedded in dev onboarding: no production code without a failing test first
 - **verification-before-completion** as hard gate: run verification commands before claiming done
+- **Acceptance command** as proof of function: dev runs it and pastes raw stdout in completion report
 - **2-Action Rule**: after every 2 search/read ops, update findings.md
 - **3-Strike protocol**: 3 failures → escalate to team-lead
 - **Context recovery**: after compaction, read task files in order
 - **Doc-Code sync**: API/architecture changes → must update docs/
+
+**Agent Heartbeat Monitoring** (team-lead runs continuously during C2):
+- After dispatching each round of tasks, note the time
+- Periodically read each active agent's `progress.md` (last 5 lines)
+- If an agent has no updates for an extended period → `SendMessage` asking for status
+- If no reply after follow-up → mark as HUNG → re-spawn agent with same task context from `.plans/` files
+- Record heartbeat check results in `.plans/<project>/progress.md`
 
 ### C3: Per-Task Convergence Cycle (Goal Convergence — Core Mechanism)
 
@@ -299,6 +309,10 @@ Reviewer → SendMessage(to: "team-lead") with review summary
 1. **Research phase done**: team-lead reads researcher findings → updates main plan architecture section
 2. **Dev phase done**: all dev tasks passed two-stage review → team-lead confirms
 3. **E2E testing done**: e2e-tester results reviewed → team-lead confirms pass rate
+4. **Integration smoke test** (at every phase boundary and every 3-5 tasks):
+   - Run smoke tests defined in `.plans/<project>/smoke-tests.md`
+   - Each test step must produce non-empty, non-default output
+   - Any step failing → PHASE BLOCKED → fix before advancing
 
 ### C5: Final Spec Acceptance (Goal Convergence — Final Gate)
 
@@ -375,6 +389,12 @@ After ALL tasks are complete, team-lead performs a **full spec acceptance review
 - **Final spec acceptance**: after all tasks, team-lead verifies every spec requirement is met (see C5)
 - **Evidence before claims**: no completion without verification command output
 - **Feedback loop**: review issues → dev fixes → re-review → confirm fix (never skip re-review)
+- **Every task has an acceptance command**: written by team-lead, run by dev, re-run by reviewer
+- **Dev pastes raw stdout**: not "acceptance passed" but the actual terminal output
+- **Hollow implementations blocked by CI**: GR-6 detects pass/empty bodies before review
+- **Integration smoke tests at phase boundaries**: end-to-end pipeline must produce real output
+- **Heartbeat monitoring**: team-lead detects hung agents and re-spawns
+- **Hallucination detection**: reviewer compares dev's report against actual git diff and acceptance output
 
 ### Combined (Bridge Layer)
 - **Plan-to-role mapping**: every plan task gets a role suggestion and parallel group
