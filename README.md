@@ -1,5 +1,7 @@
 # X-TeamCode
 
+[中文文档](README_CN.md)
+
 Structured Planning + Multi-Agent Team Execution for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
 Combines [superpowers](https://github.com/obra/superpowers)' disciplined planning workflow with [CCteam-creator](https://github.com/jessepwj/CCteam-creator)'s multi-agent team orchestration. Plan complex projects through brainstorming and detailed task decomposition, then execute with parallel AI agent teams — with built-in goal convergence at every step.

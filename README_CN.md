@@ -1,5 +1,7 @@
 # X-TeamCode
 
+[English](README.md)
+
 结构化计划 + 多智能体团队执行，适用于 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)。
 
 融合 [superpowers](https://github.com/obra/superpowers) 的严谨计划工作流与 [CCteam-creator](https://github.com/jessepwj/CCteam-creator) 的多智能体团队协作能力。通过头脑风暴和细粒度任务分解来规划复杂项目，然后由并行 AI 智能体团队执行——每一步都内置目标收敛机制。
