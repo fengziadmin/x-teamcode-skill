@@ -1,0 +1,19 @@
+{
+  "name": "x-teamcode",
+  "description": "Structured planning (superpowers) + multi-agent team execution (CCteam-creator). Plan complex projects with brainstorming and detailed task decomposition, then execute with parallel AI agent teams.",
+  "version": "1.0.0",
+  "author": {
+    "name": "x-teamcode"
+  },
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "planning",
+    "agent-teams",
+    "multi-agent",
+    "orchestration",
+    "tdd",
+    "brainstorming",
+    "skills"
+  ]
+}

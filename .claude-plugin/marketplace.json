@@ -1,0 +1,17 @@
+{
+  "name": "x-teamcode-skill",
+  "owner": {
+    "name": "x-teamcode"
+  },
+  "metadata": {
+    "description": "Structured planning + multi-agent team execution for Claude Code.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "x-teamcode",
+      "source": "./",
+      "description": "Structured planning (superpowers) + multi-agent team execution (CCteam-creator)"
+    }
+  ]
+}
