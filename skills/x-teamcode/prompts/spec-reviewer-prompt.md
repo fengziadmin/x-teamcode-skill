@@ -77,13 +77,44 @@ Write results to your review folder: `.plans/<project>/reviewer/review-<target>/
 - <requirement> was interpreted as <what dev did> but spec says <what was intended>
   - File: <path:line>
 
+### Hallucination Check
+- [ ] Dev report matches git diff: YES/NO
+- [ ] Acceptance command output matches report: YES/NO
+- [ ] Output is real data (not empty/mock/TODO): YES/NO
+- If any NO → `[HALLUCINATION]` CRITICAL, verdict is automatically ❌
+
 ### Summary
 - Requirements checked: N
 - Implemented correctly: N
 - Missing: N
 - Extra: N
 - Misunderstood: N
+- Hallucination detected: YES/NO
 ```
+
+### Step 3.5: Hallucination Detection
+
+Verify that the dev's completion report matches reality:
+
+**Report vs Code:**
+- For each claim in the dev's report, verify it exists in `git diff`
+- Dev says "implemented X" → is X actually in the code?
+- Dev says "added tests for Y" → do test files for Y exist in the diff?
+
+**Report vs Acceptance Command:**
+- Re-run the acceptance command from the task description
+- Compare output to what the dev pasted in their report
+- Check: is the output real data? (not empty, not "TODO", not mock)
+
+**If discrepancy found:**
+```
+[HALLUCINATION] Dev claimed: "<claim>"
+  Actual: <what code/output shows>
+  Severity: CRITICAL
+  Action: task is NOT spec compliant regardless of other checks
+```
+
+A hallucination finding overrides all other results — verdict is automatically ❌.
 
 ### Step 5: Communicate Result
 
