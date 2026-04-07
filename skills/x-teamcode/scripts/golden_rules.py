@@ -273,6 +273,114 @@ def check_invariant_coverage(docs_dir, result):
 
 
 # ---------------------------------------------------------------------------
+# GR-6: Hollow Implementation Detection
+# ---------------------------------------------------------------------------
+HOLLOW_BODY_PATTERNS = [
+    (r"^\s*pass\s*$", "Function body is `pass`"),
+    (r"^\s*\.\.\.\s*$", "Function body is `...` (ellipsis)"),
+    (r"^\s*raise\s+NotImplementedError", "Function raises NotImplementedError"),
+]
+
+HOLLOW_RETURN_PATTERNS = [
+    (r"""^\s*return\s+['"]TODO['"]""", "Returns hardcoded 'TODO'"),
+    (r"""^\s*return\s+['"]not.?implemented['"]""", "Returns 'not implemented' string"),
+    (r"^\s*return\s+\{\s*\}\s*$", "Returns empty dict"),
+    (r"^\s*return\s+\[\s*\]\s*$", "Returns empty list"),
+    (r"^\s*return\s+None\s*$", "Returns None explicitly"),
+]
+
+SHALLOW_TEST_PATTERNS = [
+    (r"assert\s+\w+\s+is\s+not\s+None\s*$", "Test only checks not-None"),
+    (r"assert\s+callable\s*\(", "Test only checks callable"),
+    (r"assert\s+hasattr\s*\(", "Test only checks attribute exists"),
+]
+
+# Markers that indicate intentionally empty implementations (skip these)
+INTENTIONAL_EMPTY_MARKERS = (
+    "@abstractmethod",
+    "# intentionally empty",
+    "# abstract",
+    "# interface",
+    "# placeholder — will be implemented by subclass",
+)
+
+
+def _is_inside_function(lines, line_idx):
+    """Check if a line is inside a function/method body (rough heuristic)."""
+    for i in range(line_idx - 1, max(line_idx - 10, -1), -1):
+        stripped = lines[i].strip()
+        if stripped.startswith("def ") or stripped.startswith("async def "):
+            return True
+        if stripped and not stripped.startswith("#") and not stripped.startswith("@"):
+            break
+    return False
+
+
+def _has_intentional_marker(lines, line_idx):
+    """Check if nearby lines contain a marker indicating intentionally empty code."""
+    start = max(0, line_idx - 5)
+    end = min(len(lines), line_idx + 2)
+    context = "\n".join(lines[start:end]).lower()
+    return any(marker.lower() in context for marker in INTENTIONAL_EMPTY_MARKERS)
+
+
+def check_hollow_implementation(src_dirs, result):
+    """Detect hollow implementations: pass bodies, hardcoded returns, shallow tests."""
+    print("[GR-6] Hollow Implementation Check")
+    found = False
+
+    for f in _iter_code_files(src_dirs):
+        try:
+            content = f.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            continue
+
+        lines = content.splitlines()
+        is_test_file = (
+            any(part in {"test", "tests", "__tests__", "spec"} for part in f.parts)
+            or f.name.startswith("test_")
+        )
+
+        for i, line in enumerate(lines):
+            if line.strip().startswith("#"):
+                continue
+            if _has_intentional_marker(lines, i):
+                continue
+
+            if not is_test_file and _is_inside_function(lines, i):
+                for pattern, desc in HOLLOW_BODY_PATTERNS:
+                    if re.search(pattern, line):
+                        result.fail(
+                            "GR-HOLLOW",
+                            f"{f}:{i+1} -- {desc}: {line.strip()[:80]}",
+                            "Implement actual logic. Empty function bodies are not allowed in production code.")
+                        found = True
+                        break
+
+                for pattern, desc in HOLLOW_RETURN_PATTERNS:
+                    if re.search(pattern, line):
+                        result.warn(
+                            "GR-HOLLOW",
+                            f"{f}:{i+1} -- {desc}: {line.strip()[:80]}",
+                            "Replace with actual computed return value. Hardcoded/empty returns suggest incomplete implementation.")
+                        found = True
+                        break
+
+            if is_test_file:
+                for pattern, desc in SHALLOW_TEST_PATTERNS:
+                    if re.search(pattern, line):
+                        result.warn(
+                            "GR-HOLLOW-TEST",
+                            f"{f}:{i+1} -- {desc}: {line.strip()[:80]}",
+                            "Add assertions on actual output content (e.g., assert len(result) > 0).")
+                        found = True
+                        break
+
+    if not found:
+        print("  [OK] No hollow implementations detected.\n")
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 def check_all(src_dirs, docs_dir=None):
@@ -286,6 +394,7 @@ def check_all(src_dirs, docs_dir=None):
     check_file_size(src_dirs, result)
     check_secrets(src_dirs, result)
     check_console_log(src_dirs, result)
+    check_hollow_implementation(src_dirs, result)
 
     if docs_dir:
         check_doc_freshness(docs_dir, src_dirs, result)
