@@ -304,6 +304,26 @@ Reviewer → SendMessage(to: "team-lead") with review summary
 - **Maximum 3 review rounds per stage.** If issues persist → escalate to team-lead.
 - **Small tasks exception**: Bug fixes, config changes, and single-line changes can skip the two-stage cycle. Dev uses judgment; reviewer can request full review if needed.
 
+### C3.5: API Contract Validation (multi-role projects)
+
+When a project has both frontend and backend roles, **API contracts are the single source of truth**:
+
+1. `docs/api-contracts.md` defines every endpoint: method, path, request/response schema
+2. **Backend dev**: acceptance command must validate that routes match api-contracts.md
+3. **Frontend dev**: acceptance command must validate that requests match api-contracts.md (method + path + payload)
+4. **Reviewer**: cross-validates both sides against the same contract during spec compliance review
+5. **Mock mode must be OFF** for frontend acceptance commands — if `VITE_USE_MOCK=true` or equivalent, acceptance fails
+
+```
+Contract validation flow:
+  api-contracts.md (single source of truth)
+       ↓                    ↓
+  Backend validates:    Frontend validates:
+  route matches doc     request matches doc
+       ↓                    ↓
+  Reviewer cross-checks: do both sides match the SAME contract?
+```
+
 ### C4: Phase Progression Gates
 
 1. **Research phase done**: team-lead reads researcher findings → updates main plan architecture section
@@ -313,6 +333,10 @@ Reviewer → SendMessage(to: "team-lead") with review summary
    - Run smoke tests defined in `.plans/<project>/smoke-tests.md`
    - Each test step must produce non-empty, non-default output
    - Any step failing → PHASE BLOCKED → fix before advancing
+5. **Full-stack smoke test** (mandatory when project has frontend + backend):
+   - Mock mode must be OFF
+   - At least one test must follow the full path: frontend request → backend processing → frontend displays result
+   - API method and path must match what api-contracts.md defines
 
 ### C5: Final Spec Acceptance (Goal Convergence — Final Gate)
 
@@ -395,6 +419,9 @@ After ALL tasks are complete, team-lead performs a **full spec acceptance review
 - **Integration smoke tests at phase boundaries**: end-to-end pipeline must produce real output
 - **Heartbeat monitoring**: team-lead detects hung agents and re-spawns
 - **Hallucination detection**: reviewer compares dev's report against actual git diff and acceptance output
+- **Mock mode blocked in production**: GR-7 detects mock flags; acceptance commands must run with mock OFF
+- **API contract is single source of truth**: both frontend and backend validate against docs/api-contracts.md
+- **Full-stack smoke test required**: at least one test exercises frontend→backend→frontend with mock OFF
 
 ### Combined (Bridge Layer)
 - **Plan-to-role mapping**: every plan task gets a role suggestion and parallel group

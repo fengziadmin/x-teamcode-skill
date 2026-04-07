@@ -358,6 +358,24 @@ When you change an API (new endpoint, modified response format, new fields):
 When you change architecture (new component, modified data flow):
 - MUST update `.plans/<project>/docs/architecture.md`
 
+### API Contract Validation (Frontend + Backend projects)
+`docs/api-contracts.md` is the **single source of truth** for all API interfaces.
+
+**If you are backend-dev:**
+- Every route you create/modify MUST match api-contracts.md (method, path, request/response schema)
+- If the contract doesn't exist yet for your endpoint, add it BEFORE implementing
+- Acceptance command must include: verify route matches contract
+
+**If you are frontend-dev:**
+- Every API call you make MUST match api-contracts.md (method, path, payload format)
+- **Mock mode must be OFF** when running acceptance commands — `VITE_USE_MOCK=false` or equivalent
+- If your acceptance command works with mock ON but fails with mock OFF, your task is NOT complete
+- API path/method mismatch with backend = YOUR bug to fix (align to the contract, not to mock data)
+
+**If you find a contract mismatch:**
+- Do NOT silently adapt — report to team-lead: "api-contracts.md says X but code needs Y"
+- Team-lead decides which side changes
+
 ### Observability (When Applicable)
 If the project requires structured event logging:
 - Important operations MUST emit structured events (time, event_name, status, detail)

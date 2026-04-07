@@ -254,6 +254,12 @@ team-lead is responsible for capturing user taste/style preferences:
   - Architecture changed → `docs/architecture.md` updated?
   - Change violates `docs/invariants.md`? → CRITICAL
   - Doc not updated → HIGH (doc drift is a team-level risk)
+- **API Contract Cross-Validation** (HIGH level — multi-role projects):
+  - When reviewing backend: does route method + path + schema match `docs/api-contracts.md`?
+  - When reviewing frontend: does request method + path + payload match `docs/api-contracts.md`?
+  - Cross-check: do frontend and backend agree on the same contract? (method, path, field names)
+  - Mock mode: is `VITE_USE_MOCK` or equivalent OFF in the frontend acceptance command?
+  - Contract mismatch between frontend and backend → HIGH, block until resolved
 - **Spec Compliance Checks** (HIGH level — x-teamcode specific):
   - Read the original design spec: `docs/x-teamcode/specs/<topic>-design.md`
   - Read the implementation plan: `docs/x-teamcode/plans/<feature>.md`

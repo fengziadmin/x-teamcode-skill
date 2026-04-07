@@ -381,6 +381,90 @@ def check_hollow_implementation(src_dirs, result):
 
 
 # ---------------------------------------------------------------------------
+# GR-7: Mock/Fake Detection in Production Code
+# ---------------------------------------------------------------------------
+MOCK_ENV_PATTERNS = [
+    (r"""(?i)(USE_MOCK|MOCK_ENABLED|MOCK_MODE|VITE_USE_MOCK)\s*[:=]\s*['"]?(true|1|yes)['"]?""",
+     "Mock mode enabled in config/code"),
+    (r"""(?i)(USE_MOCK|MOCK_ENABLED|MOCK_MODE|VITE_USE_MOCK)\s*[:=]\s*true""",
+     "Mock mode enabled"),
+]
+
+MOCK_IMPORT_PATTERNS = [
+    (r"""from\s+[\w.]*mock[s]?\s+import""", "Production code imports from mock module"),
+    (r"""import\s+[\w.]*mock[s]?""", "Production code imports mock module"),
+]
+
+MOCK_CONFIG_FILES = {".env", ".env.production", ".env.local", "config.ts", "config.js", "settings.py"}
+
+
+def check_mock_in_production(src_dirs, result):
+    """Detect mock mode flags and mock imports in production code."""
+    print("[GR-7] Mock/Fake Detection Check")
+    found = False
+
+    # Check config and env files at project root (parent of src_dirs)
+    checked_roots = set()
+    for src_dir in src_dirs:
+        root = Path(src_dir).parent
+        if root in checked_roots:
+            continue
+        checked_roots.add(root)
+
+        for config_name in MOCK_CONFIG_FILES:
+            config_file = root / config_name
+            if not config_file.exists():
+                continue
+            try:
+                content = config_file.read_text(encoding="utf-8", errors="ignore")
+            except Exception:
+                continue
+            for i, line in enumerate(content.splitlines(), 1):
+                if line.strip().startswith("#") or line.strip().startswith("//"):
+                    continue
+                for pattern, desc in MOCK_ENV_PATTERNS:
+                    if re.search(pattern, line):
+                        result.fail(
+                            "GR-MOCK",
+                            f"{config_file}:{i} -- {desc}: {line.strip()[:80]}",
+                            "Set mock mode to false/0 for production. Real API integration is required.")
+                        found = True
+                        break
+
+    # Check source code for mock imports in non-test files
+    for f in _iter_code_files(src_dirs):
+        is_test_file = (
+            any(part in {"test", "tests", "__tests__", "spec", "mock", "mocks", "__mocks__"}
+                for part in f.parts)
+            or f.name.startswith("test_")
+            or ".mock." in f.name
+            or ".fake." in f.name
+        )
+        if is_test_file:
+            continue
+
+        try:
+            content = f.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            continue
+
+        for i, line in enumerate(content.splitlines(), 1):
+            if line.strip().startswith("#") or line.strip().startswith("//"):
+                continue
+            for pattern, desc in MOCK_IMPORT_PATTERNS:
+                if re.search(pattern, line):
+                    result.warn(
+                        "GR-MOCK",
+                        f"{f}:{i} -- {desc}: {line.strip()[:80]}",
+                        "Production code should not import from mock modules. Use real implementations.")
+                    found = True
+                    break
+
+    if not found:
+        print("  [OK] No mock/fake usage detected in production code.\n")
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 def check_all(src_dirs, docs_dir=None):
@@ -395,6 +479,7 @@ def check_all(src_dirs, docs_dir=None):
     check_secrets(src_dirs, result)
     check_console_log(src_dirs, result)
     check_hollow_implementation(src_dirs, result)
+    check_mock_in_production(src_dirs, result)
 
     if docs_dir:
         check_doc_freshness(docs_dir, src_dirs, result)
