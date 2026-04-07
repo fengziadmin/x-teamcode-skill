@@ -221,6 +221,15 @@ team-lead is responsible for capturing user taste/style preferences:
     - Verdicts: [OK] / [WARN] / [BLOCK]
   - **Feedback loop**: issues found → dev fixes → reviewer re-reviews (max 3 rounds per stage)
   - **Small tasks exception**: bug fixes, config changes, single-line changes may skip two-stage cycle at dev's judgment. Reviewer can request full review if needed.
+- **Hallucination Detection** (x-teamcode mandatory — applies to BOTH review stages):
+  - Compare dev's completion report against actual `git diff`
+  - Re-run the task's acceptance command independently
+  - If any claim doesn't match code/output → tag `[HALLUCINATION]`, severity CRITICAL, auto-escalate to team-lead
+  - Hallucination finding = automatic review failure regardless of other results
+- **Acceptance Command Verification**:
+  - Every task has an acceptance command (written by team-lead)
+  - Reviewer MUST re-run it during Stage 1 and verify output is real (not empty/mock/TODO)
+  - If acceptance command fails → spec compliance fails, even if code looks correct
 - **Security Checks** (from code-reviewer, CRITICAL level):
   - Hardcoded secrets (API keys, passwords, tokens)
   - SQL injection (string-concatenated queries)
